@@ -1,0 +1,5 @@
+<Simulation version="4.6.0">
+   <XMLScript Type="XMLScript">Simulation/Dispersion_of_one_cell_type_into_the_medium.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/Dispersion_of_one_cell_type_into_the_medium.py</PythonScript>
+   <Resource Type="Python">Simulation/Dispersion_of_one_cell_type_into_the_mediumSteppables.py</Resource>
+</Simulation>
