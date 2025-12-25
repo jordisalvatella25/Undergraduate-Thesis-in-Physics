@@ -1,0 +1,5 @@
+<Simulation version="4.6.0">
+   <XMLScript Type="XMLScript">Simulation/Mitosis_with_pressure_constraint.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/Mitosis_with_pressure_constraint.py</PythonScript>
+   <Resource Type="Python">Simulation/Mitosis_with_pressure_constraintSteppables.py</Resource>
+</Simulation>
