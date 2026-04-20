@@ -18,4 +18,4 @@ In the **DiffusionCoefficientCalculation** simulation, the COM positions of each
 To maximize statistical accuracy:
 1.	For each lag time, the MSD is computed by averaging **over all possible time origins** (time origin averaging) **within the same trajectory**.
 2.	The resulting MSD curves are then **averaged over all cells (over all trajectories)** for each lag time.
-3.	The diffusion coefficient is obtained through a linear regression conducted over the MSD linear interval (the normal diffusion regime).
+3.	The diffusion coefficient is obtained through a **linear regression** conducted **over the MSD linear interval (the normal diffusion regime)**.
