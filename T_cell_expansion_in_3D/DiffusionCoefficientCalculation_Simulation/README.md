@@ -11,7 +11,7 @@ comparing the **simulated** and **theoretical** diffusion coefficients allow to 
 
 For particles undergoing **normal diffusion** in a **three dimensional** system, the MSD grows linearly with time according to the relationship MSD $$(t)=6Dt$$.
 
-## **MSD and D calculation procedure**
+## **MSD and $$D$$ calculation procedure**
 
 In the **DiffusionCoefficientCalculation** simulation, the COM positions of each cell at every MCS are extracted through the **UnwrappedCOMTrackerSteppable**, which also unwraps the coordinates to correctly account for **periodic boundary conditions**. The simulation also includes a **ShapeTrackerSteppable** to monitor the mean volume/surface cells ratio.
 
