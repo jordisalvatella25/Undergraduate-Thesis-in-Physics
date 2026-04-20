@@ -1,4 +1,4 @@
-## MSD vs lag time and Diffusion Coefficient calculuous
+## MSD vs lag time and Diffusion Coefficient calculation
 """
 
 from google.colab import files
