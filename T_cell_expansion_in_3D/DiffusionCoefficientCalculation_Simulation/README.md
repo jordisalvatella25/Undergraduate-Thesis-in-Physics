@@ -10,7 +10,7 @@ Taking into account that
 comparing the **simulated** and **theoretical** diffusion coefficients allow to determine the  correspondence between simulation time (Monte Carlo Steps) and real time of in vitro T cell proliferation experiments.
 
 For particles undergoing **normal diffusion** in a **three dimensional** system, the MSD grows linearly with time according to the relationship
-$$MSD(t) = 6 Dt$$
+MSD$$(t) = 6 Dt$$
 
 ## **MSD and D calculation procedure**
 
