@@ -1,4 +1,4 @@
-##**Diffusion Coefficient Calculation of naïve T cells**
+## **Diffusion Coefficient Calculation of naïve T cells**
 
 This directory contains the **DiffusionCoefficientCalculation** simulation (used to determine the **diffusion coefficient of the naïve T cells for the proliferation dynamics simulations**) together with the data and results obtained from the different computational replicas conducted. In addition, the directory includes the post-simulation data-treatment script (**Script_MSD_vs_lag_time_Plots_and_DiffusionCoefficient_Calculation**), used to compute the Mean Square Displacement (hereafter MSD) and the diffusion coefficient, as well as to generate the corresponding plots.
 
@@ -12,7 +12,7 @@ comparing the **simulated** and **theoretical** diffusion coefficients allow to 
 For particles undergoing **normal diffusion** in a **three dimensional** system, the MSD grows linearly with time according to the relationship
 $$\langle r^2(t) \rangle = 6 Dt$$
 
-#**MSD and D calculation procedure**
+# **MSD and D calculation procedure**
 
 In the **DiffusionCoefficientCalculation** simulation, the COM positions of each cell at every MCS are extracted through the **UnwrappedCOMTrackerSteppable**, which also unwraps the coordinates to correctly account for **periodic boundary conditions**. The simulation also includes a **ShapeTrackerSteppable** to monitor the mean volume/surface cells ratio.
 
