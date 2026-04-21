@@ -1,7 +1,7 @@
-| Steppable | Parameters (Free / Fixed) | Trackers |
+| Steppable | Parameters | Trackers |
 |----------|----------------------------|----------|
-| **Contact Plugin** | Adhesion constants (fixed) | — |
-| **InitialConditionsSteppable** | R_porus (fixed)<br>N_porus / wall_thickness (fixed)<br>N_tcells (fixed)<br>r_tcell (fixed)<br>lambdaVolume (fixed)<br>lambdaSurface (fixed) | — |
+| **Contact Plugin** | Adhesion constants | — |
+| **InitialConditionsSteppable** | R_porus<br>N_porus<br>N_tcells<br>r_tcell<br>lambdaVolume<br>lambdaSurface| — |
 | **TCellActivationSteppable** | lambdaVolume post‑activation (fixed)<br>lambdaSurface post‑activation (fixed) | Cells_counter.txt<br>(#TCells, #ActivatedTCells, %ActivatedTCells)<br>freq = 100 (plots freq = 1) |
 | **TCellGrowthSteppable** | volume_threshold<br>pressure_threshold<br>base_growth_rate<br>growth_rate_multiplier | Mean_volume.txt (freq = 100)<br>Mean_pressure.txt (freq = 100) |
 | **TCellMitosisSteppable** | volume_min_division<br>pressure_max_division<br>max_divisions (fixed) | Total_divisions.txt<br>freq = 100 (plots freq = 1) |
