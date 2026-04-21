@@ -6,8 +6,7 @@ This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed 
 
 ### **Contact plugin**
 
-Adhesion hierarchies through defining adhesion constants.
-From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
+Adhesion hierarchies through defining adhesion constants. From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
 
 ### **InitialConditionsSteppable**
 
@@ -18,27 +17,36 @@ From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
 -Geometric relation between cell diameter and pore diameter.
 
 ### **TCellActivationSteppable**
+
 **Contact dependent activation**: cells activate upon interaction with the activating surface.
+
 Morphological changes after activation: decreased lambdaVolume and lambdaSurface.
+
 ### **TCellGrowthSteppable**
+
 Growth allowed only when:
-•	Volume < maximum growth volume.
-•	Pressure < maximum growth pressure.
+
+- Volume < maximum growth volume.
+  
+- Pressure < maximum growth pressure.
+
 Different growth rates for activated and non-activated cells.
+
 ### **TCellMitosisSteppable**
+
 Division allowed only when:
-•	Volume > minimum division volume.
-•	Pressure < maximum division pressure.
-•	Accumulated divisions < maximum allowed divisions.
+
+- Volume > minimum division volume.
+- Pressure < maximum division pressure.
+- Accumulated divisions < maximum allowed divisions.
+  
 Maximum accumulated divisions set to 10.
+
 Cells are born already activated.
+
 Both child cells inherit all parent attributes, including division history.
-FREE PARAMETERS AND TRACKERS USED IN THE SIMULATION:
-(Tabla)
 
-
-
-
+## **Free parameters and trackers used in the simulation:**
 
 | Steppable | Parameters | Trackers |
 |----------|----------------------------|----------|
