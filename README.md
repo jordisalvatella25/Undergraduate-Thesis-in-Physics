@@ -29,5 +29,5 @@ It includes:
 - Diffusion Test simulation.
 - Several preliminary simulations used in the developing process of the final 3D expansion models.
 
-***TCellExpansionInPorousMedium3D*** and ***TCellExpansionOnActivatingSurface*** simulations are used to compare how environmental structure affects T cell proliferation dynamics.
+***TCellExpansionInPorousMedium3D*** and ***TCellExpansionOnActivatingFlatSurface3D*** simulations are used to compare how environmental structure affects T cell proliferation dynamics.
 
