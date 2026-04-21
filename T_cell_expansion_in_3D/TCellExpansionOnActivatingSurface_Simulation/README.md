@@ -1,8 +1,8 @@
 # **T Cell Expansion On Activating Surface Simulation**
 
-This directory contains the **TCellExpansionOnActivatingSurface** simulation, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis on an adhesive surface**.
+This directory contains the ***TCellExpansionOnActivatingSurface*** simulation, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis on an adhesive surface**.
 
-This simulation follows the same modelling framework as the **TCellExpansionInPorousMedium3D** simulation, with only a few specific differences highlighted 🔸throughout the text🔸 (modified initial conditions and an additional monitoring steppable).
+This simulation follows the same modelling framework as the ***TCellExpansionInPorousMedium3D*** simulation, with only a few specific differences highlighted 🔸throughout the text🔸 (modified initial conditions and an additional monitoring steppable).
 
 ## **Modelling decisions**
 
