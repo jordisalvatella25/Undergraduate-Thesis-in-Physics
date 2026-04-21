@@ -1,12 +1,12 @@
 # **T Cell Expansion in Porous Medium Simulation**
 
-This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed to study T Cell proliferation via contact-dependent activation, growth and mitosis within a porous medium.
+This directory contains the **TCellExpansionInPorousMedium3D_Simulation**, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis within a porous medium**.
 
 ## **Modelling decisions**
 
 ### **Contact plugin**
 
-Adhesion hierarchies through defining adhesion constants. From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
+**Adhesion hierarchies** through defining adhesion constants. From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
 
 ### **InitialConditionsSteppable**
 
@@ -20,7 +20,7 @@ Geometric relation between cell diameter and pore diameter.
 
 **Contact dependent activation**: cells activate upon interaction with the activating surface.
 
-Morphological changes after activation: decreased lambdaVolume and lambdaSurface.
+**Morphological changes after activation**: decreased lambdaVolume and lambdaSurface.
 
 ### **TCellGrowthSteppable**
 
@@ -29,7 +29,7 @@ Growth allowed only when:
 - Volume < maximum growth volume.
 - Pressure < maximum growth pressure.
 
-Different growth rates for activated and non-activated cells.
+**Different growth rates** for activated and non-activated cells.
 
 ### **TCellMitosisSteppable**
 
@@ -41,9 +41,9 @@ Division allowed only when:
   
 Maximum accumulated divisions set to 10.
 
-Cells are born already activated.
+**Cells are born already activated.**
 
-Both child cells inherit all parent attributes, including division history.
+Both child cells inherit **all parent attributes**, including **division history**.
 
 ## **Free parameters and trackers used in the simulation:**
 
