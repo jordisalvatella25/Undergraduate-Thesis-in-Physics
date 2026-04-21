@@ -1,6 +1,6 @@
-# **T cell Expansion in Porous Medium Simulation**
+# **T Cell Expansion in Porous Medium Simulation**
 
-This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed to study T cell proliferation via contact-dependent activation, growth and mitosis within a porous medium.
+This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed to study T Cell proliferation via contact-dependent activation, growth and mitosis within a porous medium.
 
 ## **Modelling decisions**
 
