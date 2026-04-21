@@ -24,7 +24,7 @@ This directory contains the **three-dimensional simulations to model cell contac
 It includes:
 
 - T Cell Expansion in Porous Medium simulation.
-- T Cell Expansion on Activating Flat Surface.
+- T Cell Expansion on Activating Flat Surface simulation.
 - Diffusion Coefficient calculation simulation.
 - Diffusion Test simulation.
 - Several preliminary simulations used in the developing process of the final 3D expansion models.
