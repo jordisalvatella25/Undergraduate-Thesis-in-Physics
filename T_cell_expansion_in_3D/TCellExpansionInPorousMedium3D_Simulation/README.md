@@ -10,11 +10,11 @@ Adhesion hierarchies through defining adhesion constants. From strongest to weak
 
 ### **InitialConditionsSteppable**
 
--Spherical porous medium geometry.
+Spherical porous medium geometry.
 
--Placement of T cells inside the porous structure.
+Placement of T cells inside the porous structure.
 
--Geometric relation between cell diameter and pore diameter.
+Geometric relation between cell diameter and pore diameter.
 
 ### **TCellActivationSteppable**
 
@@ -27,7 +27,6 @@ Morphological changes after activation: decreased lambdaVolume and lambdaSurface
 Growth allowed only when:
 
 - Volume < maximum growth volume.
-  
 - Pressure < maximum growth pressure.
 
 Different growth rates for activated and non-activated cells.
