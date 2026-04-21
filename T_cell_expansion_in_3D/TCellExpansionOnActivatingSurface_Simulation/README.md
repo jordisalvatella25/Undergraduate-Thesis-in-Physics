@@ -49,6 +49,7 @@ Both child cells inherit **all parent attributes**, including **division history
 |----------|----------------------------|----------|
 | **Contact Plugin** | Adhesion constants | — |
 | **InitialConditionsSteppable** | wall_thickness<br>N_tcells<br>r_tcell<br>lambdaVolume<br>lambdaSurface| — |
+| **HeightMonitoringSteppable** | z_warning<br>z_top| Height_monitoring.txt<br>(Cells_reaching_warning_height) |
 | **TCellActivationSteppable** | lambdaVolume post‑activation<br>lambdaSurface post‑activation| Cells_counter.txt<br>(#TCells, #ActivatedTCells, %ActivatedTCells) |
 | **TCellGrowthSteppable** | volume_threshold<br>pressure_threshold<br>base_growth_rate<br>growth_rate_multiplier | Mean_volume.txt<br>Mean_pressure.txt |
 | **TCellMitosisSteppable** | volume_min_division<br>pressure_max_division<br>max_divisions | Total_divisions.txt |
