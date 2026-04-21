@@ -1,6 +1,6 @@
 # **T Cell Expansion On Activating Surface Simulation**
 
-This directory contains the **TCellExpansionInPorousMedium3D_Simulation**, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis within an adhesive porous medium surface**.
+This directory contains the **TCellExpansionOnActivatingSurface** simulation, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis on an adhesive surface**.
 
 ## **Modelling decisions**
 
@@ -10,11 +10,9 @@ This directory contains the **TCellExpansionInPorousMedium3D_Simulation**, desig
 
 ### **InitialConditionsSteppable**
 
-Spherical porous medium geometry.
+Wall thickness.
 
-Placement of T cells inside the porous structure.
-
-Geometric relation between cell diameter and pore diameter.
+Placement of T cells near the surface.
 
 ### **TCellActivationSteppable**
 
