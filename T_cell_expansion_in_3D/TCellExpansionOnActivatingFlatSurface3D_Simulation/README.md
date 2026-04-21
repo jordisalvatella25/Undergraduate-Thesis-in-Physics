@@ -1,4 +1,4 @@
-# **T Cell Expansion On Activating Surface Simulation**
+# **T Cell Expansion On Activating Flat Surface Simulation**
 
 This directory contains the ***TCellExpansionOnActivatingFlatSurface3D*** simulation, designed to study **T Cell proliferation via contact-dependent activation, growth and mitosis on an adhesive flat surface**.
 
