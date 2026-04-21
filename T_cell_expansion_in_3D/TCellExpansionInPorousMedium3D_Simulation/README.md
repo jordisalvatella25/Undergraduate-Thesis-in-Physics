@@ -6,7 +6,7 @@ This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed 
 
 ### **Contact plugin**
 
-Adhesion hierarchies through defining adhesion constants. From strongest to weakest: TCell¬¬-Wall, TCell-Medium, TCell-TCell.
+Adhesion hierarchies through defining adhesion constants. From strongest to weakest: TCell-Wall, TCell-Medium, TCell-TCell.
 
 ### **InitialConditionsSteppable**
 
