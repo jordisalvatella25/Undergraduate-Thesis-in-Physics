@@ -47,7 +47,7 @@ Both child cells inherit **all parent attributes**, including **division history
 
 ## **Free parameters and trackers used in the simulation:**
 
-| Steppable | Parameters | Trackers |
+| Plugin/Steppable | Parameters | Trackers |
 |----------|----------------------------|----------|
 | **Contact Plugin** | Adhesion constants | — |
 | **InitialConditionsSteppable** | R_porus<br>N_porus<br>N_tcells<br>r_tcell<br>lambdaVolume<br>lambdaSurface| — |
