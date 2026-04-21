@@ -10,9 +10,9 @@ This directory contains the **TCellExpansionOnActivatingSurface** simulation, de
 
 ### **InitialConditionsSteppable**
 
-<span style="color:red">Wall thickness.</span>
+🔴Wall thickness.
 
-Placement of T cells <span style="color:red">near the surface</span>.
+Placement of T cells 🔴near the surface.
 
 ### **TCellActivationSteppable**
 
