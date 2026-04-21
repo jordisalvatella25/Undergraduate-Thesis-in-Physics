@@ -12,22 +12,22 @@ The goals are:
 
 The repository is organized into two main directories:
 
-1)	Exploring_the_GGH_Model
+**1)	Exploring_the_GGH_Model**
 
-This directory contains a collection of exploratory simulations (and their results) used to explore and become familiar with the model and CompuCell3D software.
+This directory contains a **collection of exploratory simulations (and their results)** used to explore and become familiar with the model and CompuCell3D software.
 
 
-2)	T_cell_expansion_in_3D
+**2)	T_cell_expansion_in_3D**
 
-This directory contains the three-dimensional simulations to model cell contact dependent growth and division within a material.
+This directory contains the **three-dimensional simulations to model cell contact-dependent growth and division within a material**.
 
 It includes:
 
-	T Cell Expansion in Porous Medium simulation.
-	T Cell Expansion on Activating Flat Surface.
-	Diffusion Coefficient calculation simulation.
-	Diffusion Test simulation.
-	Several preliminary simulations used in the developing process of the final 3D expansion models.
+- T Cell Expansion in Porous Medium simulation.
+- T Cell Expansion on Activating Flat Surface.
+- Diffusion Coefficient calculation simulation.
+- Diffusion Test simulation.
+- Several preliminary simulations used in the developing process of the final 3D expansion models.
 
-TCellExpansionInPorousMedium3D and TCellExpansionOnActivatingSurface simulations are used to compare how environmental structure affects T cell proliferation dynamics.
+***TCellExpansionInPorousMedium3D*** and ***TCellExpansionOnActivatingSurface*** simulations are used to compare how environmental structure affects T cell proliferation dynamics.
 
