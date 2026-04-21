@@ -3,7 +3,7 @@
 This directory contains the TCellExpansionInPorousMedium3D_Simulation, designed to study T cell proliferation via contact-dependent activation, growth and mitosis within a porous medium.
 
 ## **Modelling decisions**
-#### **Contact plugin**
+### **Contact plugin**
 Adhesion hierarchies through defining adhesion constants. From strongest to weakest: TCell¬¬-Wall, TCell-Medium, TCell-TCell.
 InitialConditionsSteppable
 Spherical porous medium geometry.
