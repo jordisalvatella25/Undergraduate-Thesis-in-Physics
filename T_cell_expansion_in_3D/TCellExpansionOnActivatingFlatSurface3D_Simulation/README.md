@@ -47,7 +47,7 @@ Both child cells inherit **all parent attributes**, including **division history
 
 ## **Free parameters and trackers used in the simulation:**
 
-| Steppable | Parameters | Trackers |
+| Plugin/Steppable | Parameters | Trackers |
 |----------|----------------------------|----------|
 | **Contact Plugin** | Adhesion constants | — |
 | **InitialConditionsSteppable** | 🔸wall_thickness🔸<br>N_tcells<br>r_tcell<br>🔸max_z_tcell_creation🔸<br>lambdaVolume<br>lambdaSurface| — |
