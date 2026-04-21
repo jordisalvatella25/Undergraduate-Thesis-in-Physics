@@ -6,7 +6,7 @@ The GGH model is based on a generalized spin model typical of statistical physic
 
 The goals are:
 - Explore the GGH model by building and analyzing standard models provided in the official CompuCell3D documentation, as well as several variations of them to deepen understanding.
-- Develop a three-dimensional simulation to model cell contact dependent growth and division within a material and study its behaviour under different parameter configurations.
+- Develop a three-dimensional simulation to model cell contact-dependent growth and division within a material and study its behaviour under different parameter configurations.
 
 ## **Repository structure**
 
