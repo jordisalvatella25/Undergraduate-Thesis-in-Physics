@@ -7,6 +7,7 @@ All simulations were run for **250,000 MCS** on a **100 × 100 × 100 lattice**,
 Taking into account that
 - the **spatial-units correspondence is 1.5 micrometers/voxel** due to that naïve T cells have a real diameter of 6 micrometers, while in the simulations framework its diameter measures 4 voxels,
 - and that the diffusion coefficient has lenght $$^{2}$$ /time dimensions,
+
 comparing the **simulated** and **theoretical** diffusion coefficients allow to determine the  correspondence between simulation time (Monte Carlo Steps) and real time of *in vitro* T cell proliferation experiments.
 
 For particles undergoing **normal diffusion** in a **three-dimensional** system, the MSD grows linearly with time according to the relationship MSD $$(t)=6Dt$$.
