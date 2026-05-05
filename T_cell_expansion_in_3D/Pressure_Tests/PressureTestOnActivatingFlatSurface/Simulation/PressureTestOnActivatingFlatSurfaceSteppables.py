@@ -1,0 +1,909 @@
+from cc3d.core.PySteppables import *
+import numpy as np
+import math
+import random
+
+class InitialConditionsSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=1):
+
+        SteppableBasePy.__init__(self,frequency)
+
+    def start(self):
+
+        wall_thickness = 10   # thickness of the flat wall in voxels
+
+        boolean_free_space = np.zeros((self.dim.x, self.dim.y, self.dim.z), dtype=bool)
+        boolean_wall = np.zeros((self.dim.x, self.dim.y, self.dim.z), dtype=bool)
+
+        # we create the flat wall (activating surface)
+
+        wall = self.new_cell(self.WALL)
+
+        for i, j, k in self.every_pixel():
+            if k < wall_thickness:
+                boolean_wall[i, j, k] = True
+                self.cell_field[i, j, k] = wall
+            else:
+                boolean_free_space[i, j, k] = True
+
+        # we create the T Cells as 'spheres'
+
+        N_tcells = 100
+        r_tcell = 2
+
+        # offsets of the T Cell sphere
+        sphere_offsets = []
+        for i in range(-r_tcell, r_tcell + 1):
+            for j in range(-r_tcell, r_tcell + 1):
+                for k in range(-r_tcell, r_tcell + 1):
+                    if i * i + j * j + k * k <= r_tcell * r_tcell:
+                        sphere_offsets.append((i, j, k))
+
+        tcells_created = 0
+        max_z_tcell_creation = 30
+
+        while tcells_created < N_tcells:
+
+            # we choose a random voxel of the lattice
+
+            x = np.random.randint(0, self.dim.x)
+            y = np.random.randint(0, self.dim.y)
+            z = np.random.randint(0, max_z_tcell_creation)
+
+            # it must be in free space
+            if not boolean_free_space[x, y, z]:
+                continue
+
+            # we check if the cell voxels are valid
+            valid = True
+            for dx, dy, dz in sphere_offsets:
+                xx = x + dx
+                yy = y + dy
+                zz = z + dz
+
+                # out of the lattice --> invalid
+                if not (0 <= xx < self.dim.x and 0 <= yy < self.dim.y and 0 <= zz < self.dim.z):
+                    valid = False
+                    break
+
+                # invades the wall --> invalid
+                if boolean_wall[xx, yy, zz]:
+                    valid = False
+                    break
+
+                # invades other T cell --> invalid
+                if self.cell_field[xx, yy, zz] is not None and self.cell_field[xx, yy, zz].type == self.TCELL:
+                    valid = False
+                    break
+
+            if not valid:
+                continue
+
+            # if the voxels are valid, we create the T Cell
+            tcell = self.new_cell(self.TCELL)
+
+            for dx, dy, dz in sphere_offsets:
+                xx = x + dx
+                yy = y + dy
+                zz = z + dz
+                self.cell_field[xx, yy, zz] = tcell
+
+            # adjust the volume and surface parameters
+            tcell.targetVolume = (4 / 3) * math.pi * r_tcell * r_tcell * r_tcell
+            tcell.lambdaVolume = 1.2
+            tcell.targetSurface = 4 * math.pi * r_tcell * r_tcell
+            tcell.lambdaSurface = 1.5
+
+            tcells_created += 1
+            
+
+    def step(self, mcs):
+        """
+        Called every frequency MCS while executing the simulation
+
+        :param mcs: current Monte Carlo step
+        """
+
+    def finish(self):
+        """
+        Called after the last MCS to wrap up the simulation
+        """
+
+    def on_stop(self):
+        """
+        Called if the simulation is stopped before the last MCS
+        """
+
+class HeightMonitoringSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=1):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        self.z_warning = self.dim.z - 21   # 79 if z=100
+        self.z_top = self.dim.z - 1        # 99 if z=100
+
+        # Create a file to monitor the height reached by cells
+        self.height_tracker_file = open("Height_monitoring.txt", "w")
+        self.height_tracker_file.write("#MCS\tCells_reaching_warning_height\n")
+        self.height_tracker_file.flush()
+
+    def step(self, mcs):
+
+        cells_reaching_z_warning = 0
+        touches_z_top = False
+        cell_on_top = None
+
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+
+            reach_z_warning = False
+
+
+            for bpd in self.get_cell_boundary_pixel_list(cell):
+                z = bpd.pixel.z
+
+                if z >= self.z_warning:
+                    reach_z_warning = True
+
+                if z == self.z_top:
+                    touches_z_top = True
+
+                if reach_z_warning or touches_z_top:
+                    break
+
+            if reach_z_warning:
+                cells_reaching_z_warning += 1
+
+            if touches_z_top:
+                cell_on_top = cell.id
+                break
+
+        # update output at every step
+        if mcs % 100 == 0:
+            self.height_tracker_file.write(f"{mcs}\t{cells_reaching_z_warning}\n")
+            self.height_tracker_file.flush()
+        
+        # stop the simulation if the z_top is reached
+        if touches_z_top:
+            print(f"WARNING: cell {cell_on_top} reached the top boundary at MCS = {mcs}")
+            self.stop_simulation()
+            return
+
+    def finish(self):
+
+        self.height_tracker_file.close()
+
+    def on_stop(self):
+
+        self.height_tracker_file.close()
+
+
+
+class TCellActivationSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=1):
+
+        SteppableBasePy.__init__(self,frequency)
+
+    def start(self):
+
+        # Create cell dictionaries and track activation
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+            '''if not hasattr(cell, 'dict') or cell.dict is None:
+                cell.dict={}
+            '''
+            cell.dict['was_activated'] = cell.type == self.ACTIVATEDTCELL
+
+        # Create a file to track number of TCells and ActivatedTCells
+        self.counting_tracker_file = open(r"Cells_counter.txt", "w")
+        self.counting_tracker_file.write("#MCS\tTotalCells_Number\tTCells_Number\tActivatedTCells_Number\tPercentage_ActivatedTCells\n")
+        self.counting_tracker_file.flush()
+
+        # Plot in real time the number of each type of T cell
+        self.cells_counter_plot = self.add_new_plot_window(title='Cells number vs MCS',
+            x_axis_title='MCS',
+            y_axis_title='Cells number',
+            x_scale_type='linear',
+            y_scale_type='linear',
+            grid=True,
+            config_options={'legend':True})
+        self.cells_counter_plot.add_plot("Total Cells", style='Lines', color='cyan')
+        self.cells_counter_plot.add_plot("T Cells", style='Lines', color='green')
+        self.cells_counter_plot.add_plot("Activated T Cells", style='Lines', color='red')
+
+    def step(self, mcs):
+
+        # Check regular T cells for new activations
+
+        for cell in self.cell_list_by_type(self.TCELL):
+
+            is_touching = self.is_touching_wall(cell)
+
+            # If it is in contact with the wall, activate it
+
+            if is_touching:
+
+                # Preserve cell properties when changing type
+
+                #original_dict = dict(cell.dict) # (We create a copy of the dictionary)
+                original_target_volume = cell.targetVolume
+                original_target_surface = cell.targetSurface
+                #original_lambda_volume = cell.lambdaVolume
+                #original_lambda_surface = cell.lambdaSurface
+
+                # Activate it
+
+                cell.type = self.ACTIVATEDTCELL
+
+                # Restore properties
+
+                #cell.dict = original_dict
+                cell.targetVolume = original_target_volume
+                cell.targetSurface = original_target_surface
+                #cell.lambdaVolume = original_lambda_volume
+                #cell.lambdaSurface = original_lambda_surface
+                # After activation, T cells undergo morphological changes, adquiring less spherical and more extended and flattened form
+                cell.lambdaVolume = 0.9
+                cell.lambdaSurface = 1.2
+
+                # Update activation track
+
+                cell.dict['was_activated'] = True
+
+                # There is no code to deactivate cells: they remain activated
+
+        # Record the number of TCells, ActivatedTCells and TotalCells
+        TotalCells_number = len(self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL))
+        TCells_number = len(self.cell_list_by_type(self.TCELL))
+        ActivatedTCells_number = len(self.cell_list_by_type(self.ACTIVATEDTCELL))
+
+        if mcs % 100 == 0:
+            percent_activated = ((ActivatedTCells_number)/(TCells_number+ActivatedTCells_number))*100
+            self.counting_tracker_file.write(f"{mcs}\t{TotalCells_number}\t{TCells_number}\t{ActivatedTCells_number}\t{percent_activated}\n")
+            self.counting_tracker_file.flush()
+            
+        self.cells_counter_plot.add_data_point("Total Cells", mcs, TotalCells_number)
+        self.cells_counter_plot.add_data_point("T Cells", mcs, TCells_number)
+        self.cells_counter_plot.add_data_point("Activated T Cells", mcs, ActivatedTCells_number)
+
+    def is_touching_wall(self, cell): # Definition of the TCell - Wall contact detector method
+        for neighbor, area in self.get_cell_neighbor_data_list(cell):
+            if neighbor and neighbor.type == self.WALL:
+                return True
+        return False
+
+    def finish(self):
+
+        self.counting_tracker_file.close()
+
+    def on_stop(self):
+        """
+        Called if the simulation is stopped before the last MCS
+        """
+
+
+class TCellGrowthSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=1):
+
+        SteppableBasePy.__init__(self,frequency)
+
+    def start(self):
+
+        # Open the tracker output files
+        self.mean_volume_tracker_file = open(r"Mean_volume.txt", "w")
+        self.mean_volume_tracker_file.write("#MCS\tMean_volume\n")
+        self.mean_volume_tracker_file.flush()
+
+        self.mean_pressure_tracker_file = open(r"Mean_pressure.txt", "w")
+        self.mean_pressure_tracker_file.write("#MCS\tMean_pressure\t{Cells_over_pressure_threshold}\n")
+        self.mean_pressure_tracker_file.flush()
+
+        # Define the volume and pressure thresholds
+        self.r_max = 4
+        self.volume_threshold = (4/3)*math.pi*self.r_max*self.r_max*self.r_max
+        self.pressure_threshold = 200
+        
+        # Define the growth rates
+        
+        self.growth_rate_TC = 0
+        self.growth_rate_ATC = 0.0015
+
+
+    def step(self, mcs):
+
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+
+            # Calculate the cell pressure
+            cell.dict['pressure'] = -2*cell.lambdaVolume*(cell.volume-cell.targetVolume)
+
+            # Check if the cell volume or the cell pressure exceed the threshold values
+            if cell.volume >= self.volume_threshold or cell.dict['pressure'] > self.pressure_threshold:
+                continue
+
+            # If the cell can grow, define growth rates for both types of T cells
+            else:
+                if cell.type == self.ACTIVATEDTCELL:
+                    growth_rate = self.growth_rate_ATC
+                else:
+                    growth_rate = self.growth_rate_TC
+
+                # Update targetVolume (and targetSurface)
+                cell.targetVolume += growth_rate
+                cell.targetSurface = ((36*math.pi)**(1/3))*(cell.targetVolume**(2/3))
+
+        # Register mean volume and mean pressure data in output files
+        if mcs % 100 == 0:
+            
+            total_volume = 0.0
+            total_pressure = 0.0
+            cells_over_pressure_threshold = 0
+            all_Tcells_number = len(self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL))
+            
+            for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+                total_volume += cell.volume
+                total_pressure += cell.dict['pressure']
+                
+                if cell.dict['pressure'] >= self.pressure_threshold:
+                    cells_over_pressure_threshold += 1
+                    
+            mean_volume = total_volume/all_Tcells_number
+            mean_pressure = total_pressure/all_Tcells_number
+            
+            self.mean_volume_tracker_file.write(f"{mcs}\t{mean_volume}\n")
+            self.mean_volume_tracker_file.flush()
+            self.mean_pressure_tracker_file.write(f"{mcs}\t{mean_pressure}\t{cells_over_pressure_threshold}\n")
+            self.mean_pressure_tracker_file.flush()
+
+    def finish(self):
+
+        self.mean_volume_tracker_file.close()
+        self.mean_pressure_tracker_file.close()
+
+    def on_stop(self):
+        """
+        Called if the simulation is stopped before the last MCS
+        """
+
+
+class TCellMitosisSteppable(MitosisSteppableBase):
+    def __init__(self,frequency=1):
+        MitosisSteppableBase.__init__(self,frequency)
+
+    def start(self):
+
+        # Define the minimum volume, the maximum pressure and the maximum number of divisions for mitosis
+        self.r_min_division = 2*(2**(1/3))
+        self.volume_min_division = (4/3)*math.pi*self.r_min_division*self.r_min_division*self.r_min_division
+        self.pressure_max_division = 200
+        self.max_divisions = 10
+
+        # Initialize division counter for all T Cells
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+            cell.dict['division_count'] = 0
+
+        # Create a total divisions counter
+        self.total_divisions_counter = 0
+
+        # Open the total divisions counter output file
+        self.total_divisions_tracker_file = open(r"Total_divisions.txt", "w")
+        self.total_divisions_tracker_file.write("#MCS\tTotal_divisions\n")
+        self.total_divisions_tracker_file.flush()
+
+        # Plot in real time the number total divisions
+        self.divisions_counter_plot = self.add_new_plot_window(title='Total divisions vs MCS',
+            x_axis_title='MCS',
+            y_axis_title='Total divisions',
+            x_scale_type='linear',
+            y_scale_type='linear',
+            grid=True,
+            config_options={'legend':True})
+        self.divisions_counter_plot.add_plot("Total divisions", style='Lines', color='blue')
+
+    def step(self, mcs):
+
+        # Select the T cells that reunite the conditions to divide
+        cells_to_divide=[]
+        for cell in self.cell_list_by_type(self.ACTIVATEDTCELL):
+            if cell.volume >= self.volume_min_division and cell.dict['pressure'] <= self.pressure_max_division and cell.dict['division_count'] < self.max_divisions:
+                cells_to_divide.append(cell)
+
+        # Divide them
+        for cell in cells_to_divide:
+            self.divide_cell_random_orientation(cell)
+            self.total_divisions_counter += 1
+
+        # Register total divisions
+        if mcs % 100 == 0:
+            self.total_divisions_tracker_file.write(f"{mcs}\t{self.total_divisions_counter}\n")
+            self.total_divisions_tracker_file.flush()
+
+        self.divisions_counter_plot.add_data_point("Total divisions", mcs, self.total_divisions_counter)
+
+    def update_attributes(self):
+        
+        # The cells are born already activated
+        # Reduce the parent targetVolume, update properly its targetSurface and increment its division count
+        self.parent_cell.targetVolume /= 2.0
+        self.parent_cell.targetSurface = ((36*math.pi)**(1/3))*(self.parent_cell.targetVolume**(2/3))
+        self.parent_cell.dict['division_count'] += 1
+
+        # Clone parent cell attributes to child cell including division history
+        self.clone_parent_2_child()
+
+    def finish(self):
+
+        self.total_divisions_tracker_file.close()
+
+
+class PressurePercentilesTrackerSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=100):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        self.pressure_percentiles_file = open("Pressure_percentiles.txt", "w")
+        self.pressure_percentiles_file.write("#MCS\tTotal_cells\tP_mean\tP10\tP20\tP30\tP40\tP50\tP60\tP70\tP75\tP80\tP90\tP95\tP99\tP_max\n")
+        self.pressure_percentiles_file.flush()
+
+    def step(self, mcs):
+
+        pressures = []
+
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+            if 'pressure' in cell.dict:
+                pressures.append(cell.dict['pressure'])
+
+        total_cells = len(pressures)
+
+        if total_cells > 0:
+
+            pressures = np.array(pressures, dtype=float)
+
+            P_mean = np.mean(pressures)
+
+            P10 = np.percentile(pressures, 10)
+            P20 = np.percentile(pressures, 20)
+            P30 = np.percentile(pressures, 30)
+            P40 = np.percentile(pressures, 40)
+            P50 = np.percentile(pressures, 50)
+            P60 = np.percentile(pressures, 60)
+            P70 = np.percentile(pressures, 70)
+            P75 = np.percentile(pressures, 75)
+            P80 = np.percentile(pressures, 80)
+            P90 = np.percentile(pressures, 90)
+            P95 = np.percentile(pressures, 95)
+            P99 = np.percentile(pressures, 99)
+
+            P_max = np.max(pressures)
+
+        else:
+
+            P_mean = 0.0
+            P10 = P20 = P30 = P40 = P50 = P60 = P70 = 0.0
+            P75 = P80 = P90 = P95 = P99 = 0.0
+            P_max = 0.0
+
+        self.pressure_percentiles_file.write(f"{mcs}\t{total_cells}\t{P_mean}\t{P10}\t{P20}\t{P30}\t{P40}\t{P50}\t{P60}\t{P70}\t{P75}\t{P80}\t{P90}\t{P95}\t{P99}\t{P_max}\n")
+        self.pressure_percentiles_file.flush()
+
+    def finish(self):
+
+        self.pressure_percentiles_file.close()
+        
+        
+
+class EnergiesTrackerSteppable(SteppableBasePy):
+    def __init__(self, frequency=100):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        # define adhesion constants dictionary
+
+        self.J = {
+            (self.MEDIUM, self.MEDIUM): 0.0,
+            (self.MEDIUM, self.TCELL): 2.5,
+            (self.MEDIUM, self.ACTIVATEDTCELL): 2.5,
+            (self.MEDIUM, self.WALL): 0.0,
+            (self.TCELL, self.TCELL): 5.0,
+            (self.TCELL, self.ACTIVATEDTCELL): 5.0,
+            (self.TCELL, self.WALL): 1.0,
+            (self.ACTIVATEDTCELL, self.ACTIVATEDTCELL): 5.0,
+            (self.ACTIVATEDTCELL, self.WALL): 1.0,
+            (self.WALL, self.WALL): 0.0,
+        }
+
+        for (t1, t2), val in list(self.J.items()):
+            self.J[(t2, t1)] = val
+
+        # Open the output data files
+        self.volume_energy_file = open(r"Volume_energy.txt", "w")
+        self.volume_energy_file.write("#MCS\tVolume_energy\n")
+        self.volume_energy_file.flush()
+        
+        self.surface_energy_file = open(r"Surface_energy.txt", "w")
+        self.surface_energy_file.write("#MCS\tSurface_energy\n")
+        self.surface_energy_file.flush()
+
+        self.adhesion_energy_file = open(r"Adhesion_energy.txt", "w")
+        self.adhesion_energy_file.write("#MCS\tAdhesion_energy\n")
+        self.adhesion_energy_file.flush()
+
+        self.total_energy_file = open(r"Total_energy.txt", "w")
+        self.total_energy_file.write("#MCS\tTotal_energy\n")
+        self.total_energy_file.flush()
+
+        # Create the data plots
+        '''
+        self.energy_plot = self.add_new_plot_window(title='Energies vs MCS',
+            x_axis_title='MCS',
+            y_axis_title='Energy',
+            x_scale_type='linear',
+            y_scale_type='linear',
+            grid=True,
+            config_options={'legend':True})
+        self.energy_plot.add_plot("total energy", style='Lines', color='green')
+        self.energy_plot.add_plot("adhesion energy", style='Lines', color='red')
+        self.energy_plot.add_plot("volume energy", style='Lines', color='blue')
+        self.energy_plot.add_plot("surface energy", style='Lines', color='cian')
+        '''
+
+    def step(self, mcs):
+        
+        if mcs % 100 == 0:
+            
+            adhesion_energy = 0.0
+            volume_energy = 0.0
+            surface_energy = 0.0
+            
+            for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+            
+                # Calculate the adhesion energy
+
+                boundary_pixels = self.get_cell_boundary_pixel_list(cell) # plugin BoundaryPixelTracker is required in XML
+
+                for bpd in boundary_pixels:
+                    x, y, z = bpd.pixel.x, bpd.pixel.y, bpd.pixel.z
+
+                    for nb in self.get_pixel_neighbors_based_on_neighbor_order(
+                            pixel=(x, y, z),
+                            neighbor_order=2):
+
+                        x2, y2, z2 = nb.pt.x, nb.pt.y, nb.pt.z
+                        cell2 = self.cell_field[x2, y2, z2]
+
+                        if cell2 is cell:
+                            continue
+
+                        type1 = cell.type
+                        type2 = cell2.type if cell2 else self.MEDIUM
+
+                        J = self.J.get((type1, type2), 0.0)
+
+                        if cell2 is None:
+                            # cell-medium contact -> only counted once
+                            adhesion_energy += J
+                        elif cell2.type == self.WALL:
+                            # cell-wall contact -> only counted once
+                            adhesion_energy += J
+                        else:
+                            # cell-cell interfase -> counted to times -> J/2
+                            adhesion_energy += J / 2.0
+
+                # Calculate the volume energy
+                volume_energy += cell.lambdaVolume*((cell.volume - cell.targetVolume)**2)
+                    
+                # Calculate the surface energy
+                surface_energy += cell.lambdaSurface*((cell.surface - cell.targetSurface)**2)
+
+            total_energy = adhesion_energy + volume_energy + surface_energy
+            
+            # Register the data
+            self.volume_energy_file.write(f"{mcs}\t{volume_energy}\n")
+            self.volume_energy_file.flush()
+            
+            self.surface_energy_file.write(f"{mcs}\t{surface_energy}\n")
+            self.surface_energy_file.flush()
+
+            self.adhesion_energy_file.write(f"{mcs}\t{adhesion_energy}\n")
+            self.adhesion_energy_file.flush()
+
+            self.total_energy_file.write(f"{mcs}\t{total_energy}\n")
+            self.total_energy_file.flush()
+
+            # Plot the data
+            '''
+            self.energy_plot.add_data_point("total energy", mcs, total_energy)
+            self.energy_plot.add_data_point("adhesion energy", mcs, adhesion_energy)
+            self.energy_plot.add_data_point("volume energy", mcs, volume_energy)
+            self.energy_plot.add_data_point("surface energy", mcs, surface_energy)
+            '''
+        
+    def finish(self):
+
+        self.volume_energy_file.close()
+        
+        self.surface_energy_file.close()
+
+        self.adhesion_energy_file.close()
+
+        self.total_energy_file.close()
+        
+
+class WallContactTrackerSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=100):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        # Output file for number of cells touching the wall
+        self.wall_contact_cells_file = open("Wall_contact_cells.txt", "w")
+        self.wall_contact_cells_file.write("#MCS\tActivatedTCells_touching_Wall\tTotal_cells_touching_Wall\tNumber_ActivatedTCells\tPercent_ActivatedTCells_touching_wall\n")
+        self.wall_contact_cells_file.flush()
+
+        # Output file for total cell-Wall contact area
+        self.wall_contact_area_file = open("Wall_contact_area.txt", "w")
+        self.wall_contact_area_file.write("#MCS\tActivatedTCell_Wall_contact_area\tTotal_cell_Wall_contact_area\n")
+        self.wall_contact_area_file.flush()
+
+    def step(self, mcs):
+
+        tcell_touching_wall = 0
+        activated_tcell_touching_wall = 0
+
+        tcell_wall_contact_area = 0.0
+        activated_tcell_wall_contact_area = 0.0
+        # The cell-Wall contact area is computed as the number of distinct Wall voxels in contact with each cell. 
+        # This avoids overcounting due to multiple boundary pixels detecting the same Wall voxel.
+        # However, if different cells contact the same Wall voxel, 
+        # it is counted independently for each cell,
+        # as the metric is defined per cell rather than as a global Wall coverage measure.
+
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+
+            touches_wall = False
+
+            # set of unique Wall voxels touched by this cell
+            wall_voxels_in_contact = set() # the set does not accept repeated values (tuples, in this case)
+
+            boundary_pixels = self.get_cell_boundary_pixel_list(cell)
+
+            for bpd in boundary_pixels:
+                x, y, z = bpd.pixel.x, bpd.pixel.y, bpd.pixel.z
+
+                for nb in self.get_pixel_neighbors_based_on_neighbor_order(
+                        pixel=(x, y, z),
+                        neighbor_order=1):
+
+                    x2, y2, z2 = nb.pt.x, nb.pt.y, nb.pt.z
+                    cell2 = self.cell_field[x2, y2, z2]
+
+                    if cell2 is cell:
+                        continue
+
+                    if cell2 is not None and cell2.type == self.WALL:
+                        touches_wall = True
+                        wall_voxels_in_contact.add((x2, y2, z2))
+
+            cell_wall_contact_area = float(len(wall_voxels_in_contact))
+
+            # update number of cells touching Wall
+            if touches_wall:
+                if cell.type == self.TCELL:
+                    tcell_touching_wall += 1
+                elif cell.type == self.ACTIVATEDTCELL:
+                    activated_tcell_touching_wall += 1
+
+            # update contact area with the Wall
+            if cell.type == self.TCELL:
+                tcell_wall_contact_area += cell_wall_contact_area
+            elif cell.type == self.ACTIVATEDTCELL:
+                activated_tcell_wall_contact_area += cell_wall_contact_area
+
+        total_cells_touching_wall = tcell_touching_wall + activated_tcell_touching_wall
+        total_cell_wall_contact_area = tcell_wall_contact_area + activated_tcell_wall_contact_area
+        ActivatedTCells_number = len(self.cell_list_by_type(self.ACTIVATEDTCELL))
+        if ActivatedTCells_number > 0:
+            percent_activatedTCells_touching_wall = (activated_tcell_touching_wall / ActivatedTCells_number) * 100
+        else:
+            percent_activatedTCells_touching_wall = 0.0
+
+        # update number of cells touching Wall output
+        self.wall_contact_cells_file.write(f"{mcs}\t{activated_tcell_touching_wall}\t{total_cells_touching_wall}\t{ActivatedTCells_number}\t{percent_activatedTCells_touching_wall}\n")
+        self.wall_contact_cells_file.flush()
+
+        # update contact area with Wall output
+        self.wall_contact_area_file.write(f"{mcs}\t{activated_tcell_wall_contact_area}\t{total_cell_wall_contact_area}\n")
+        self.wall_contact_area_file.flush()
+
+    def finish(self):
+        self.wall_contact_cells_file.close()
+        self.wall_contact_area_file.close()
+        
+        
+class DivisionStructureTrackerSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=100):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        # Store initial cell ids and initial number of cells
+        self.initial_cell_ids = set(cell.id for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL))
+        self.initial_cells_number = len(self.initial_cell_ids)
+
+        # Get maximum number of divisions from the mitosis steppable
+        self.max_divisions = 10
+
+        # Open output file: depletion of initial cells with 0 divisions
+        self.initial_cells_proliferation_file = open("Initial_cells_proliferation_tracker.txt", "w")
+        self.initial_cells_proliferation_file.write("#MCS\tInitial_cells\tInitial_cells_activated\tInitial_cells_with_1_or_more_divisions\tPercent_initial_cells_with_1_or_more_divisions_respect_totalinitial\tPercent_initial_cells_with_1_or_more_divisions_respect_activatedinitial\n")
+        self.initial_cells_proliferation_file.flush()
+
+        # Open output file: histogram of division_count percentages over the whole current population
+        self.division_histogram_file = open("Division_histogram_tracker.txt", "w")
+        header = "#MCS\tTotal_cells"
+        for n in range(self.max_divisions + 1):
+            header += f"\tPercent_div_{n}"
+        header += "\n"
+        self.division_histogram_file.write(header)
+        self.division_histogram_file.flush()
+
+    def step(self, mcs):
+
+        all_cells = list(self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL))
+        total_cells = len(all_cells)
+        
+        # Output for the depletion of initial cells with 0 divisions
+        
+        initial_cells_activated = 0
+        initial_cells_with_1_or_more_divisions = 0
+
+        for cell in all_cells:
+            if cell.id in self.initial_cell_ids:
+                if cell.type == self.ACTIVATEDTCELL:
+                    initial_cells_activated += 1
+                    if not cell.dict.get('division_count', 0) == 0:
+                        initial_cells_with_1_or_more_divisions += 1
+
+        if self.initial_cells_number > 0:
+            percent_initial_cells_with_1_or_more_divisions_respect_totalinitial = (initial_cells_with_1_or_more_divisions/self.initial_cells_number)*100
+        else:
+            percent_initial_cells_with_1_or_more_divisions_respect_totalinitial = 0.0
+        
+        if initial_cells_activated > 0:
+            percent_initial_cells_with_1_or_more_divisions_respect_activatedinitial = (initial_cells_with_1_or_more_divisions/initial_cells_activated)*100
+        else:
+            percent_initial_cells_with_1_or_more_divisions_respect_activatedinitial = 0.0
+
+        self.initial_cells_proliferation_file.write(f"{mcs}\t{self.initial_cells_number}\t{initial_cells_activated}\t{initial_cells_with_1_or_more_divisions}\t{percent_initial_cells_with_1_or_more_divisions_respect_totalinitial}\t{percent_initial_cells_with_1_or_more_divisions_respect_activatedinitial}\n")
+        self.initial_cells_proliferation_file.flush()
+
+        # Output histogram of division_count percentages
+
+        histogram_counts = [0] * (self.max_divisions + 1)
+        
+        for cell in all_cells:
+            div_count = cell.dict.get('division_count', 0)
+            histogram_counts[div_count] += 1
+            
+        histogram_percents = []
+
+        if total_cells > 0:
+            for count in histogram_counts:
+                histogram_percents.append((count/total_cells)*100)
+        else:
+            for i in range(self.max_divisions + 1):
+                histogram_percents.append(0.0)
+
+        line = f"{mcs}\t{total_cells}"
+        for pct in histogram_percents:
+            line += f"\t{pct}"
+        line += "\n"
+
+        self.division_histogram_file.write(line)
+        self.division_histogram_file.flush()
+
+    def finish(self):
+
+        self.initial_cells_proliferation_file.close()
+
+        self.division_histogram_file.close()
+
+        
+class VSRatioAndDistanceTrackerSteppable(SteppableBasePy):
+
+    def __init__(self, frequency=100):
+        SteppableBasePy.__init__(self, frequency)
+
+    def start(self):
+
+        # open the output data files
+        self.tracker_file = open("VS_Distance_tracker.txt", "w")
+        self.tracker_file.write("#MCS\tVS_mean\tVS_ideal_mean\tQ_mean\tD_mean\n")
+        self.tracker_file.flush()
+
+        # we create dictionaries to store the previous COM and the traveled distance for each cell
+        self.prev_COM = {}
+        self.D = {}
+        
+        self.initial_cell_ids = set()
+        
+        # we initialize dictionaries for all existing cells
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+            self.initial_cell_ids.add(cell.id)
+            self.prev_COM[cell.id] = (cell.xCOM, cell.yCOM, cell.zCOM)
+            self.D[cell.id] = 0.0
+
+        # get lattice dimensions (for periodic conditions correction)
+        self.Dx = self.dim.x
+        self.Dy = self.dim.y
+        self.Dz = self.dim.z
+
+    def step(self, mcs):
+
+        VS_list = [] # V/S relation for each cell
+        VS_ideal_list = [] # Ideal spherical V/S relation for each cell
+        Q_list = [] # Q = VS/VS_ideal, Q <= 1
+        D_list = [] # Total traveled distance for each initial cell
+
+        for cell in self.cell_list_by_type(self.TCELL, self.ACTIVATEDTCELL):
+
+            # volume/surface ratio calculation
+            V = cell.volume
+            S = cell.surface
+            VS = V / S if S > 0 else 0.0
+            VS_list.append(VS)
+            r = ((3/(4*math.pi))*V)**(1/3)
+            VS_ideal = r/3
+            VS_ideal_list.append(VS_ideal)
+            Q = VS / VS_ideal if VS_ideal > 0 else 0.0
+            Q_list.append(Q)
+
+            if cell.id in self.initial_cell_ids: #only for initial cells
+            
+                # total distance traveled calculation
+                x_prev, y_prev, z_prev = self.prev_COM[cell.id]
+
+                dx = cell.xCOM - x_prev
+                dy = cell.yCOM - y_prev
+                dz = cell.zCOM - z_prev
+
+                # we correct the calculation because of the periodic conditions
+                dx -= self.Dx * round(dx / self.Dx)
+                dy -= self.Dy * round(dy / self.Dy)
+                dz -= self.Dz * round(dz / self.Dz)
+
+                dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+                self.D[cell.id] += dist
+
+                # update the previous COM
+                self.prev_COM[cell.id] = (cell.xCOM, cell.yCOM, cell.zCOM)
+
+                D_list.append(self.D[cell.id])
+
+        # means calculation and print in the output file
+        if len(VS_list) > 0:
+            VS_mean = sum(VS_list) / len(VS_list)
+            VS_ideal_mean = sum(VS_ideal_list) / len(VS_ideal_list)
+            Q_mean = sum(Q_list) / len(Q_list)
+        else:
+            VS_mean = 0.0
+            VS_ideal_mean = 0.0
+            Q_mean = 0.0
+            
+        if len(D_list) > 0:
+            D_mean = sum(D_list) / len(D_list)
+        else:
+            D_mean = 0.0
+
+        self.tracker_file.write(f"{mcs}\t{VS_mean}\t{VS_ideal_mean}\t{Q_mean}\t{D_mean}\n")
+        self.tracker_file.flush()
+
+    def finish(self):
+        self.tracker_file.close()
