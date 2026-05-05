@@ -1,5 +1,0 @@
-<Simulation version="4.6.0">
-   <XMLScript Type="XMLScript">Simulation/TCellExpansionInPorousMedium3D.xml</XMLScript>
-   <PythonScript Type="PythonScript">Simulation/TCellExpansionInPorousMedium3D.py</PythonScript>
-   <Resource Type="Python">Simulation/TCellExpansionInPorousMedium3DSteppables.py</Resource>
-</Simulation>
