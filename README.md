@@ -27,7 +27,7 @@ It includes:
 - T Cell Expansion on Activating Flat Surface simulation.
 - Diffusion Coefficient calculation simulation.
 - Pressure Test simulations (both in porous media and on flat surface).
-- Diffusion Test simulation.
+- Diffusion Test simulations.
 - Several preliminary simulations used in the developing process of the final 3D expansion models.
 
 ***TCellExpansionInPorousMedium3D*** and ***TCellExpansionOnActivatingFlatSurface3D*** simulations are used to compare how environmental structure affects T cell proliferation dynamics.
