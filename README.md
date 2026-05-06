@@ -19,7 +19,7 @@ This directory contains a **collection of exploratory simulations (and their res
 
 **2)	T_cell_expansion_in_3D**
 
-This directory contains the main **three-dimensional simulations to model cell contact-dependent growth and division within a material** and their results. In addition, it contains several other simulations as parameter tests and prelimiary simulations (all used for the developing of the final 3D expansion models), as well as their corresponding data analysis.
+This directory contains the main **three-dimensional simulations to model cell contact-dependent growth and division within a material**, and their results. In addition, it contains several other simulations as parameter tests and prelimiary simulations (all used for the developing of the final 3D expansion models), as well as their corresponding data analysis.
 
 It includes:
 
