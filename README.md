@@ -19,13 +19,14 @@ This directory contains a **collection of exploratory simulations (and their res
 
 **2)	T_cell_expansion_in_3D**
 
-This directory contains the **three-dimensional simulations to model cell contact-dependent growth and division within a material**.
+This directory contains the **three-dimensional simulations to model cell contact-dependent growth and division within a material**, their results 
 
 It includes:
 
 - T Cell Expansion in Porous Medium simulation.
 - T Cell Expansion on Activating Flat Surface simulation.
 - Diffusion Coefficient calculation simulation.
+- Pressure Test simulations (both in porous media and on flat surface).
 - Diffusion Test simulation.
 - Several preliminary simulations used in the developing process of the final 3D expansion models.
 
